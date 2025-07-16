@@ -25,5 +25,5 @@ urlpatterns = [
     path('editConfig/', views.edit_config_info),
     path('deleteConfig/', views.delete_config_info),
     path('userLogin/', views.user_login),
-    path('userLogout/', views.user_logout),
+    path('userLogout/', views.user_logout),#你好
 ]
