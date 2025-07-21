@@ -18,13 +18,42 @@ from django.contrib.auth import login
 from django.contrib.sessions.models import Session
 from django.contrib.auth import logout
 
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from .serializers import UserRegistrationSerializer
 
+
+class UserRegistrationView(APIView):
+    def post(self, request):
+        serializer = UserRegistrationSerializer(data=request.data)
+        response = {}
+        print(serializer)
+        print(serializer.is_valid())
+        print("验证错误:", serializer.errors)  # 打印到控制台
+        if serializer.is_valid(raise_exception=True):
+            user = serializer.save()
+            response['code'] = 0
+            response['msg'] = 'User registered successfully!'
+            response['username'] = serializer.validated_data.get('username')
+            return JsonResponse(response)
+        
+        response['code'] = 1
+        response['msg'] = 'There are some problems in your program!'
+        return JsonResponse(response)
+    
+    
+    
 @require_http_methods(['GET'])
 def all_project_config(request):
     '''
     @return code 0 信息获取成功；1 信息获取失败
     @return msg    返回所有配置信息；返回空值
     '''
+    # 确保用户已经登陆了
+    if not request.user.is_authenticated:
+        return JsonResponse({'error':'illegal user!'}, status = 401)
+    
     response = {}
     try:
         config_objs = models.projectconfig.objects.all().values_list()
@@ -46,6 +75,9 @@ def create_config_info(request):
     @return code 0创建成功; 1创建失败
     @return msg, You have created a new configer successfully!; There are some problems in your program!	
     '''
+    # 确保用户已经登陆了
+    if not request.user.is_authenticated:
+        return JsonResponse({'error':'illegal user!'}, status = 401)
     
     id = 0
     config_count = models.projectconfig.objects.all().values_list().count()
@@ -153,7 +185,9 @@ def edit_config_info(request):
     @return code 0编辑成功; 1编辑失败
     @return msg, You have created a new configer successfully!; There are some problems in your program!	
     '''
-    
+    # 确保用户已经登陆了
+    if not request.user.is_authenticated:
+        return JsonResponse({'error':'illegal user!'}, status = 401)
     #配置信息
     #config_id = request.POST.get('id')
     config_key = request.POST.get('key')
@@ -213,7 +247,9 @@ def delete_config_info(request):
     @return code 0删除成功; 1删除失败
     @return msg, You have created a new configer successfully!; There are some problems in your program!	
     '''
-    
+    # 确保用户已经登陆了
+    if not request.user.is_authenticated:
+        return JsonResponse({'error':'illegal user!'}, status = 401)
     #配置信息
     config_id = request.POST.get('id')
     config_key = request.POST.get('key')

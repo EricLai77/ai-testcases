@@ -24,3 +24,19 @@ new Vue({
 })
 
 Vue.use(ElementUI);
+
+// 响应拦截
+axios.interceptors.response.use(response => {
+  console.log('响应拦截')
+  //console.log(response.data.encrypted)
+  //const bytes = CryptoJS.AES.decrypt(response.data.encrypted, keyJiami)
+  // response.data = JSON.parse(bytes.toString(CryptoJS.enc.Utf8))
+  //console.log(response.data)
+  return response
+}, error =>{
+  const{status} = error.response
+  if (status === 401){
+    router.push('/Home')
+  }
+  return Promise.reject(error)
+})

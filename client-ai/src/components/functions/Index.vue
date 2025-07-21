@@ -1,17 +1,16 @@
 <template>
   <div class="Index">
     <h1>{{ msg }}</h1>
-    <el-button type="primary" plain @click="enterSystem()">Enter</el-button>
     <el-form :model="loginForm" status-icon :rules="rules" ref="loginForm" label-width="30%" class="demo-loginForm">
-      <el-form-item label="账号" prop="account">
-        <el-input v-model="loginForm.account" autocomplete="off"></el-input>
+      <el-form-item label="username" prop="account">
+        <el-input v-model="loginForm.account" autocomplete="off" style="width: 300px;text-align: left;"></el-input>
       </el-form-item>
-      <el-form-item label="密码" prop="pass">
-        <el-input type="password" v-model="loginForm.pass" autocomplete="off"></el-input>
+      <el-form-item label="password" prop="pass">
+        <el-input type="password" v-model="loginForm.pass" autocomplete="off" style="width: 300px;text-align: left;"></el-input>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" @click="submitForm('loginForm')" v-loading="loginLoading">登陆</el-button>
-        <el-button @click="goRegister()">注册</el-button>
+        <el-button type="primary" @click="submitForm('loginForm')" v-loading="loginLoading">login</el-button>
+        <el-button @click="goRegister()">sign up</el-button>
       </el-form-item>
     </el-form>
   </div>
@@ -22,7 +21,7 @@ export default {
   name: "Index",
   data() {
     return {
-      msg: "Welcome to my AI Test System！ Please click 'Enter' buttom！",
+      msg: "Welcome to my AI Test System！",
       loginLoading: false,
       loginForm: {
           account: '',
@@ -31,15 +30,15 @@ export default {
       rules: {
         // 用户名规则：必填 + 长度限制 8-10
         account: [
-          { required: true, message: '请输入账号', trigger: 'blur' },
-          { min: 6, max: 10, message: '长度在 6 到 10 个字符', trigger: 'blur' }
+          { required: true, message: 'please enter your username', trigger: 'blur' },
+          { min: 6, max: 10, message: 'the length should be between  6 and 10 chars', trigger: 'blur' }
         ],
         // 密码规则：必填 + 自定义正则（至少6位字母数字）
         pass: [
-          { required: true, message: '请输入密码', trigger: 'blur' },
+          { required: true, message: 'please enter your password', trigger: 'blur' },
           { 
             pattern: /^[a-zA-Z0-9]{6,}$/, 
-            message: '密码需至少6位字母或数字', 
+            message: 'the password should contain 6 numbers or letters at least', 
             trigger: 'blur' 
           }
         ]

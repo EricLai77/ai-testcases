@@ -17,6 +17,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from server_func import views
+from django.contrib import admin
+from django.urls import path
+from server_func.views import UserRegistrationView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -26,4 +29,5 @@ urlpatterns = [
     path('deleteConfig/', views.delete_config_info),
     path('userLogin/', views.user_login),
     path('userLogout/', views.user_logout),#你好
+    path('register/', UserRegistrationView.as_view(), name='register'),
 ]

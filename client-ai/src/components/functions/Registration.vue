@@ -2,21 +2,27 @@
   <div class="registration">
     <h1>{{ msg }}</h1>
     <el-form :model="registrationForm" status-icon :rules="rules" ref="registrationForm" label-width="30%" class="demo-registrationForm">
-      <el-form-item label="账号" prop="account">
-        <el-input v-model="registrationForm.account" autocomplete="off"></el-input>
+      <el-form-item label="username" prop="username">
+        <el-input v-model="registrationForm.username" autocomplete="off"></el-input>
       </el-form-item>
-      <el-form-item label="密码" prop="pass">
-        <el-input type="password" v-model="registrationForm.pass" autocomplete="off"></el-input>
+      <el-form-item label="password" prop="password">
+        <el-input type="password" v-model="registrationForm.password" autocomplete="off"></el-input>
       </el-form-item>
-      <el-form-item label="密码确认" prop="passCheck">
-        <el-input type="password" v-model="registrationForm.passCheck" autocomplete="off"></el-input>
+      <el-form-item label="password confirm" prop="password2">
+        <el-input type="password" v-model="registrationForm.password2" autocomplete="off"></el-input>
       </el-form-item>
-      <el-form-item label="邮箱" prop="email">
+      <el-form-item label="email" prop="email">
         <el-input v-model="registrationForm.email" autocomplete="off"></el-input>
       </el-form-item>
+      <el-form-item label="first name" prop="first_name">
+        <el-input v-model="registrationForm.first_name" autocomplete="off"></el-input>
+      </el-form-item>
+      <el-form-item label="last name" prop="last_name">
+        <el-input v-model="registrationForm.last_name" autocomplete="off"></el-input>
+      </el-form-item>
       <el-form-item>
-        <el-button type="primary" @click="signUp('registrationForm')">sign up</el-button>
-        <router-link to="/">return Home</router-link>
+        <el-button type="primary" @click="signUp('registrationForm')" :disabled="loading">{{ loading ? 'loading...' : 'sign up' }}</el-button>
+        <router-link to="/">home</router-link>
       </el-form-item>
     </el-form>
   </div>
@@ -28,9 +34,9 @@ export default {
   data() {
     var validatePass2 = (rule, value, callback) => {
         if (value === '') {
-            callback(new Error('请再次输入密码'));
+            callback(new Error('please enter your password'));
         } else if (value !== this.registrationForm.pass) {
-            callback(new Error('两次输入密码不一致!'));
+            callback(new Error('two password do not match!'));
         } else {
             callback();
         }
@@ -38,46 +44,49 @@ export default {
     var validateEmail = (rule, value, callback) => {
       const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
       if (!value) {
-        callback(new Error('请输入邮箱'));
+        callback(new Error('please enter your email'));
       } else if (!emailRegex.test(value)) {
-        callback(new Error('邮箱格式不正确（示例：user@example.com）'));
+        callback(new Error('the format of email is not correct（for example：user@example.com）'));
       } else {
         callback();
       }
     };
     return {
+      loading: false,
       registrationForm: {
-          account: '',
-          pass: '',
-          passCheck: '',
-          email: ''
+        username: '',
+        password: '',
+        password2: '',
+        email: '',
+        first_name: '',
+        last_name: ''
       },
       rules: {
         // 用户名规则：必填 + 长度限制 8-10
-        account: [
-          { required: true, message: '请输入账号', trigger: 'blur' },
-          { min: 6, max: 10, message: '长度在 6 到 10 个字符', trigger: 'blur' }
+        username: [
+          { required: true, message: 'please enter your username', trigger: 'blur' },
+          { min: 6, max: 10, message: 'the length should be between  6 and 10 chars', trigger: 'blur' }
         ],
         // 密码规则：必填 + 自定义正则（至少6位字母数字）
-        pass: [
-          { required: true, message: '请输入密码', trigger: 'blur' },
+        password: [
+          { required: true, message: 'please enter your password', trigger: 'blur' },
           { 
             pattern: /^[a-zA-Z0-9]{6,}$/, 
-            message: '密码需至少6位字母或数字', 
+            message: 'the password should contain 6 numbers or letters at least', 
             trigger: 'blur' 
           }
         ],
-        passCheck: [
-          { required: true, message: '请输入密码', trigger: 'blur' },
+        password2: [
+          { required: true, message: 'please enter your password', trigger: 'blur' },
           { validator: validatePass2, trigger: 'blur' },
           { 
             pattern: /^[a-zA-Z0-9]{6,}$/, 
-            message: '密码需至少6位字母或数字', 
+            message: 'the password should contain 6 numbers or letters at least', 
             trigger: 'blur' 
           }
         ],
         email: [
-          { required: true, message: '邮箱不能为空', trigger: 'blur' },
+          { required: true, message: 'the email is required', trigger: 'blur' },
           { validator: validateEmail, trigger: 'blur' }
         ]
       }
@@ -88,15 +97,11 @@ export default {
       this.$refs[formName].validate((valid) => {
         if (valid) {
           alert('校验通过');
+          this.loading = true
           // 真正请求编辑
-          this.$axios.post('/api/testRegister/',
+          this.$axios.post('/api/register/',
             // {id: Number(row.id)},
-            this.$qs.stringify({
-              account: this.registrationForm.account,
-              pass: this.registrationForm.pass,
-              passCheck: this.registrationForm.passCheck,
-              email: this.registrationForm.email
-            }),
+            this.$qs.stringify(this.registrationForm),
             {
               headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
@@ -107,21 +112,33 @@ export default {
             // 处理前端显示
             console.log(response)
             if (response.data.code == 1) { // 表示该账号已注册
-              alert('该账号已注册！')
-            }else if (response.data.code == 2) {// 表示数据有问题
-              alert('注册数据有问题！')
-            }else if (response.data.code == 3) {// 注册过程有问题
-              alert('注册过程有问题！')
-            } 
+              alert('该注册过程有问题！')
+              this.loading = false
+            }
             else { // 表示登陆成功
               alert('注册成功！')
-              this.$router.push('/')// 跳转到指定网页，后端来决定
+              // 清空表单
+              this.registrationForm = {
+                username: '',
+                email: '',
+                password: '',
+                password2: '',
+                first_name: '',
+                last_name: ''
+              }
+              this.loading = false
+              localStorage.setItem('userName', JSON.stringify({ username: response.data.username}))
+              this.$router.push({
+                path: '/Home',
+              })// 跳转到指定网页，后端来决定
             }
           }).catch((error) => {
             console.log(error)
+            this.loading = false
           })
         } else {
           console.log('校验失败');
+          this.loading = false
           return false;
         }
       });

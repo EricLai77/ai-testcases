@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'server_func',
+    'rest_framework',
+    'corsheaders',  # 用于处理跨域请求
 ]
 
 MIDDLEWARE = [
@@ -48,7 +50,11 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
+
+# 允许所有来源的跨域请求（开发环境用，生产环境应限制）
+CORS_ALLOW_ALL_ORIGINS = True
 
 ROOT_URLCONF = 'server_ai.urls'
 
