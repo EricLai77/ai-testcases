@@ -2,11 +2,11 @@
   <div class="Index">
     <h1>{{ msg }}</h1>
     <el-form :model="loginForm" status-icon :rules="rules" ref="loginForm" label-width="30%" class="demo-loginForm">
-      <el-form-item label="username" prop="account">
-        <el-input v-model="loginForm.account" autocomplete="off" style="width: 300px;text-align: left;"></el-input>
+      <el-form-item label="Username" prop="account">
+        <el-input v-model="loginForm.account" autocomplete="off"></el-input>
       </el-form-item>
-      <el-form-item label="password" prop="pass">
-        <el-input type="password" v-model="loginForm.pass" autocomplete="off" style="width: 300px;text-align: left;"></el-input>
+      <el-form-item label="Password" prop="pass">
+        <el-input type="password" v-model="loginForm.pass" autocomplete="off" ></el-input>
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="submitForm('loginForm')" v-loading="loginLoading">login</el-button>
@@ -44,6 +44,16 @@ export default {
         ]
       }
     };
+  },
+  created() {
+    //this.resetForm()
+  },
+  activated() {
+    console.log('Index activated')
+},
+  mounted() {
+    console.log('Index mounted')
+    console.log(this.$el.innerHTML)
   },
   methods: {
     submitForm(formName) {
@@ -92,6 +102,10 @@ export default {
         }
       });
     },
+    resetForm() {
+      this.loginForm.account = ''
+      this.loginForm.pass = ''
+    },
     goRegister() {
       this.$router.push('/functions/Registration')// 跳转到注册网页
     },
@@ -104,19 +118,51 @@ export default {
  
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-h1,
-h2 {
-  font-weight: normal;
+.Index {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start; /* 从上方开始布局 */
+  min-height: 100vh;
+  padding-top: 20px; /* 整体往下留空，不会太顶 */
+  background-color: #f9f9f9;
 }
-ul {
-  list-style-type: none;
-  padding: 0;
+
+h1 {
+  margin-bottom: 30px;
+  font-size: 28px;
+  color: #2c3e50;
 }
-li {
-  display: inline-block;
-  margin: 0 10px;
+
+.demo-loginForm {
+  width: 400px;
+  padding: 30px 40px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
-a {
-  color: #42b983;
+
+.el-form-item {
+  margin-bottom: 20px;
 }
+
+/* 调整按钮行：横向并排 */
+.el-form-item:last-child {
+  display: flex;
+  justify-content: space-between;
+}
+
+.el-button {
+  flex: 1; /* 两个按钮等宽 */
+  min-width: 120px;
+  height: 38px;
+  font-size: 14px;
+}
+
+/* 给两个按钮中间加点间隔 */
+.el-button + .el-button {
+  margin-left: 15px;
+}
+
+
 </style>

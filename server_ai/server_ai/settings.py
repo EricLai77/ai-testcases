@@ -9,8 +9,11 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-
+import pymysql
+pymysql.install_as_MySQLdb()
 from pathlib import Path
+import os
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -40,7 +43,25 @@ INSTALLED_APPS = [
     'server_func',
     'rest_framework',
     'corsheaders',  # 用于处理跨域请求
+    'mydocuments',
 ]
+
+CSRF_COOKIE_HTTPONLY = False  # 允许前端读取 CSRF Cookie（默认是 False）
+CSRF_USE_SESSIONS = False     # 使用 Cookie 而非 Session 存储 Token（默认是 False）
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:8080',  # 你的前端地址
+    'https://your-production-domain.com'  # 生产环境地址
+]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',  # 如果使用Token认证
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',  # 默认需要登录
+    ]
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -57,6 +78,8 @@ MIDDLEWARE = [
 CORS_ALLOW_ALL_ORIGINS = True
 
 ROOT_URLCONF = 'server_ai.urls'
+
+
 
 TEMPLATES = [
     {
@@ -79,19 +102,24 @@ WSGI_APPLICATION = 'server_ai.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+
+
 DATABASES = {
     'default': {
         #'ENGINE': 'django.db.backends.sqlite3',
         #'NAME': BASE_DIR / 'db.sqlite3',
-        'ENGINE': 'mysql.connector.django', 
+        'ENGINE': 'django.db.backends.mysql', 
         'NAME': 'aidata',
-        'USER': 'root',
-        'PASSWORD': 'liruncheng@07',
-        'HOST': '123.207.49.50',
+        'USER': 'liruncheng',
+        'PASSWORD': '540060472lrc',
+        'HOST': 'eric-mysql-db.cnaq2m8qm4aj.ap-southeast-2.rds.amazonaws.com',
         'POST': '3306',
     }
 }
 
+MEDIA_URL = '/media/'  # 访问文件的 URL 前缀
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # 文件存储路径
+DEBUG = True  # 开发阶段保持 True 以便调试
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

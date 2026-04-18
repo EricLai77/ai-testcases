@@ -12,7 +12,9 @@
   "dependencies": {
     "axios": "^0.19.2",
     "dayjs": "^1.11.13",
+    "docx-preview": "^0.3.6",
     "element-ui": "^2.15.14",
+    "js-cookie": "^3.0.5",
     "vue": "^2.5.2",
     "vue-router": "^3.0.1"
   },

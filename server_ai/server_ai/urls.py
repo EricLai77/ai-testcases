@@ -15,19 +15,35 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 from server_func import views
-from django.contrib import admin
 from django.urls import path
 from server_func.views import UserRegistrationView
+from django.conf import settings
+from django.conf.urls.static import static
+from django.urls import path, include
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    #configure system
     path('allConfigInfo/', views.all_project_config),
     path('createConfig/', views.create_config_info),
     path('editConfig/', views.edit_config_info),
     path('deleteConfig/', views.delete_config_info),
+    #login & registeration system
     path('userLogin/', views.user_login),
     path('userLogout/', views.user_logout),#你好
     path('register/', UserRegistrationView.as_view(), name='register'),
-]
+    #document sysytem
+    path('mydocuments/', include('mydocuments.urls')),
+    #ai api test
+    path('deepseek_model', views.deepseek_model),
+    path('deepseek_model/', views.deepseek_model),
+    path('zhipu_model/', views.zhipu_model),
+    path('zhipu_model', views.zhipu_model),
+    #ai generated testcases
+    path('generate_testcase/', views.generate_testcase),
+    path('generate_testcase', views.generate_testcase),
+]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)  # 👈 关键配置
+

@@ -11,7 +11,9 @@ from django.utils import timezone
 from django.core import serializers
 from django.http import StreamingHttpResponse
 import os
+import re
 import mimetypes
+import json
 from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth import login
@@ -23,8 +25,230 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from .serializers import UserRegistrationSerializer
 
+from rest_framework.permissions import AllowAny
+from openai import OpenAI
+from zai import ZhipuAiClient
+
+#生成测试用例需要的库
+from mydocuments.models import Project, RequirementDocument, DocumentSection, InputRequirementDocument
+from testcase_script.config import loadConfig
+from testcase_script.vectorIndexing import VectorIndexing
+from testcase_script.utl import generate_and_download_docx
+from testcase_script.utl import clean_json_text
+from testcase_script.utl import clean_and_parse_json
+from testcase_script.utl import extract_outer_braces
+from testcase_script.utl import remove_json_comments
+from testcase_script.model import ZhiPu4
+from testcase_script.docmentpar import WordDocumentParser
+from testcase_script.sentencesearch import SimilarSentenceSearch
+from testcase_script.testcase_prompts import TestcasePrompts
+from testcase_script.call_my_model import process_data
+from docx import Document
+from docx.shared import Pt
+
+
+config = loadConfig()
+configs = config.load_config()
+
+@require_http_methods(['POST'])
+def generate_testcase(request):
+    response = {}
+    if not request.user.is_authenticated:
+        return JsonResponse({'error':'illegal user!'}, status = 401)
+    pass
+    
+    #获取文档id
+    body = json.loads(request.body.decode("utf-8"))
+    inputdocument_id = body.get("inputdocument_id")
+    
+    document = InputRequirementDocument.objects.get(id=inputdocument_id)
+    if document is None:
+        response['code'] = 2
+        response['msg'] = 'this document is not available!'
+        return JsonResponse(response)
+    inputdocument_name = document.name
+    #convert docx to vector
+    #print('inputdocument_name------------------------')
+    SUMMARY_LENGTH = configs['SUMMARY_LENGTH']
+    
+    #vector_indexing = VectorIndexing()
+    #vector_indexing.process_texts()
+    print('Step 1: Vector indexing completed.')
+    
+    
+    #deal with with document
+    needs_text_list = []
+    parser = WordDocumentParser("media/requirements/inputdocuments/" + inputdocument_name + ".docx")
+    sentences = parser.parse()
+    needs_text_list.append(sentences)
+    merged_needs_text_list = [sentence for sublist in needs_text_list for sentence in sublist]
+    print('merged_needs_text_list------------------------分析出来的原始需求')
+    print(merged_needs_text_list)  
+    
+    
+    zhipu_4 = ZhiPu4()
+    #print("-------------------------------------")
+    information_document = merged_needs_text_list
+    #print(f"information_document：{information_document}")
+    #print("-------------------------------------")
+    information_document_list = zhipu_4.split_list_by_text_length(information_document, SUMMARY_LENGTH)
+    print(f"information_document_list_SUMMARY_LENGTH：{information_document_list}")
+    print("-------------------------------------")
+    reponse = zhipu_4.concurrent_zhipuai_request_text(information_document_list)
+    print("切分好后的句子-------------------------------------")
+    print(f"reponse：{reponse}")
+    
+    
+    print('开始封装输入')
+    
+    #封装需求格式
+    testcase_descriptions = []
+    for response_sentence in reponse:
+        
+        
+        pre_testcase_description = TestcasePrompts.requirement_extraction_prompt(response_sentence )
+        
+        print(f"pre_testcase_description：{pre_testcase_description}")
+        print("**************************************")
+        reponse_testcase_description = zhipu_4.concurrent_zhipuai_request_text([pre_testcase_description])
+        print(f"reponse_testcase_description1：{reponse_testcase_description}")
+        print("-------------------------------------")
+        #生成的测试用例描述的预处理
+        reponse_testcase_description = reponse_testcase_description[0].strip("```python").strip("```")
+        #print(f"reponse_testcase_description2：{reponse_testcase_description}")
+        #print(type(reponse_testcase_description))
+        reponse_testcase_description = extract_outer_braces(reponse_testcase_description)
+        #print(f"reponse_testcase_description3：{reponse_testcase_description}")
+        #print(type(reponse_testcase_description))
+        clean_text = reponse_testcase_description.replace("\\n", "\n")
+        clean_text = remove_json_comments(clean_text)
+
+        #print(f"reponse_testcase_description：{reponse_testcase_description}")
+        clean_text = reponse_testcase_description.replace("'", '"')
+        clean_text = clean_json_text(clean_text)
+        
+        # eng-remove JavaScript style comments
+    
+        # eng-
+       
+        print("*******************清理小标点和清洗后*******************")
+        print(clean_text)
+        print("**************************************")
+        clean_text = json.loads(clean_text)
+        print(clean_text)
+        #print(type(clean_text))
+        for test_direction, testpoints in clean_text.items():
+            #print(f"\n【{test_direction}】")
+            for i, testpoint in enumerate(testpoints, 1):
+                #print(f"  {i}. {testpoint}")
+            
+                #final_testcase_description = json.loads(clean_text)
+                final_testcase_description = TestcasePrompts.phrase_to_natural_language(clean_text,test_direction,testpoint)
+                print(f"final_testcase_description：{final_testcase_description}")
+                testcase_descriptions.append(final_testcase_description)
+    print('Step 2: Inputed requirements analysis completed.')
+    print('testcase_requirements_analysis_descriptions------------------------')
+    print(testcase_descriptions)
+    #准备可访问模型了
+    #generated_testcases = process_data(testcase_descriptions)
+    print('Step 3: Generated testcases have been completed. Ready to export them.')
+    #response = generate_and_download_docx(request, generated_testcases, inputdocument_name)
+    print(f"✅ Step 4: Your testcases have been generated successfully!")
+    
+    
+    
+    
+    
+    response['code'] = 0
+    response['msg'] = 'your testcases have been generated successfully!'
+    print(response)
+    return response
+    
+    
+@require_http_methods(['POST'])
+def zhipu_model(request):
+    '''
+    @return code 0 信息获取成功；1 信息获取失败
+    @return msg    返回所有配置信息；返回空值
+    '''
+    # 确保用户已经登陆了
+    #if not request.user.is_authenticated:
+    #    return JsonResponse({'error':'illegal user!'}, status = 401)
+    response2Client = {}
+    output = ""
+    try:
+        # Initialize client
+        client = ZhipuAiClient(api_key="fc9abb69a1bc4fd99bc68cd4667422a0.wysA9AgtTUOL6wZW")  # 请填写您自己的 API Key
+
+        response = client.chat.completions.create(
+            model="GLM-Z1-Flash",
+            messages=[
+                {"role": "user", "content": "在新西兰的冬天，如何才能吃上便宜的蔬菜？"},
+                #{"role": "assistant", "content": "当然，要创作一个吸引人的口号，请告诉我一些关于您产品的信息"},
+                #{"role": "user", "content": "智谱AI开放平台"}
+            ],
+            thinking={
+                "type": "enabled",    # 启用深度思考模式
+            },
+            stream=True,              # 启用流式输出
+            max_tokens=1024*10,          # 最大输出tokens
+            temperature=0.3           # 控制输出的随机性
+        )
+        print('begin to answer!')
+        # 获取回复
+        for chunk in response:
+            if chunk.choices[0].delta.content:
+                print(chunk.choices[0].delta.content, end='')
+                output = output + chunk.choices[0].delta.content
+                print(chunk.choices[0])
+                print(chunk.choices[0].delta)
+            
+        print(output)
+    except:
+        response2Client['code'] = 1
+        response2Client['msg'] = 'There are some problems in your program!'
+    else:
+        response2Client['code'] = 0
+        response2Client['msg'] = output
+    
+    return JsonResponse(response2Client)
+
+@require_http_methods(['POST'])
+def deepseek_model(request):
+    '''
+    @return code 0 信息获取成功；1 信息获取失败
+    @return msg    返回所有配置信息；返回空值
+    '''
+    # 确保用户已经登陆了
+    #if not request.user.is_authenticated:
+    #    return JsonResponse({'error':'illegal user!'}, status = 401)
+    response = {}
+    #try:
+    client = OpenAI(api_key="sk-14b4820b5cd84261a752052c9cc71a44", base_url="https://api.deepseek.com")
+    print(client)
+    responseFromModel = client.chat.completions.create(
+        model="deepseek-chat",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant"},
+            {"role": "user", "content": "Hello"},
+        ],
+        stream=True
+    )
+
+    print(responseFromModel.choices[0].message.content)
+    
+    
+    #except:
+    #    response['code'] = 1
+    #    response['msg'] = 'There are some problems in your program!'
+    #else:
+    response['code'] = 0
+    response['msg'] = response.choices[0].message.content
+    
+    return JsonResponse(response)
 
 class UserRegistrationView(APIView):
+    permission_classes = [AllowAny]  # 允许未认证用户访问
     def post(self, request):
         serializer = UserRegistrationSerializer(data=request.data)
         response = {}
@@ -94,7 +318,7 @@ def create_config_info(request):
     config_value = request.POST.get('value')
     config_memo = request.POST.get('memo')
     config_create_time = date.today()
-
+    print("config_key",config_key)
     response = {}
     
     #参数判断
@@ -135,6 +359,9 @@ def create_config_info(request):
 #require_http_methods 代表调用请求时请求方法必须为POST请求
 @require_http_methods(['POST']) 
 def user_logout(request):
+    # 确保用户已经登陆了
+    if not request.user.is_authenticated:
+        return JsonResponse({'error':'illegal user!'}, status = 401)
     response = {}
     try:
         logout(request)

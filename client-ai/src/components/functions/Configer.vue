@@ -1,8 +1,44 @@
 <template>
   <div class="Configer">
-    <h1>{{ msg }}</h1>
-    <el-button type="primary" @click="dialogFormCreatedVisible = true">Add a new configer</el-button>
-    <el-dialog title="Create a new configer." :visible.sync="dialogFormCreatedVisible">
+    <!-- 标题 -->
+    <div class="page-header">
+      <h1>{{ msg }}</h1>
+      <el-button type="primary" @click="dialogFormCreatedVisible = true">
+        Add a config
+      </el-button>
+    </div>
+
+    <!-- 表格容器 -->
+    <div class="table-container">
+      <el-table
+        v-loading="tableLoading"
+        :data="tableData"
+        border
+        stripe
+        style="width: 90%; max-width: 1000px;"
+        height="800"
+      >
+        <el-table-column prop="key" label="Key" width="140"></el-table-column>
+        <el-table-column prop="value" label="Value" width="300"></el-table-column>
+        <el-table-column prop="update_time" label="Update Time" width="180"></el-table-column>
+        <el-table-column prop="memo" label="Memo" width="200"></el-table-column>
+        <el-table-column label="Operation" width="180">
+          <template slot-scope="scope">
+            <el-button @click="openEditDialog(scope.row)" type="text" size="small">Edit</el-button>
+            <el-button
+              @click="delInfo(scope.row)"
+              :loading="deleteLoading[scope.row.key]"
+              type="text"
+              size="small"
+              style="color: red;"
+            >Delete</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
+
+    <!-- 创建配置 Dialog -->
+    <el-dialog title="Create a new config" :visible.sync="dialogFormCreatedVisible">
       <el-form :model="formCreate">
         <el-form-item label="key" :label-width="formLabelWidth">
           <el-input v-model="formCreate.key"></el-input>
@@ -15,39 +51,29 @@
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="dialogFormCreatedVisible = false">cancel</el-button>
-        <el-button type="primary" @click="createInfo" v-loading="createLoading">confirm</el-button>
+        <el-button @click="dialogFormCreatedVisible = false">Cancel</el-button>
+        <el-button type="primary" @click="createInfo" v-loading="createLoading">Confirm</el-button>
       </div>
     </el-dialog>
-    <el-table v-loading="tableLoading" :data="tableData" border stripe style="width: 80%; margin: 10 auto" height="350" >
-      <el-table-column prop="key" label="Key" width="140"></el-table-column>
-      <el-table-column prop="value" label="Value" width="160"></el-table-column>
-      <el-table-column prop="update_time" label="Update Time" width="180"></el-table-column>
-      <el-table-column prop="memo" label="Memo" width="180"></el-table-column>
-      <el-table-column label="Operation" width="150">
-        <template slot-scope="scope">
-          <el-button @click="openEditDialog(scope.row)" type="text" size="small" >edit</el-button>
-          <el-dialog title="You are editting this configer." :visible.sync="dialogFormVisible">
-            <el-form :model="formChange">
-              <el-form-item label="key" :label-width="formLabelWidth" >
-                <el-input v-model="formChange.key" :placeholder="scope.row.key" :disabled="true"></el-input>
-              </el-form-item>
-              <el-form-item label="value" :label-width="formLabelWidth">
-                <el-input v-model="formChange.value" :placeholder="scope.row.value"></el-input>
-              </el-form-item>
-              <el-form-item label="memo" :label-width="formLabelWidth">
-                <el-input v-model="formChange.memo" :placeholder="scope.row.memo"></el-input>
-              </el-form-item>
-            </el-form>
-            <div slot="footer" class="dialog-footer">
-              <el-button @click="dialogFormVisible = false">cancel</el-button>
-              <el-button type="primary" v-loading="editLoading" @click="editInfo">confirm</el-button>
-            </div>
-          </el-dialog>
-          <el-button @click="delInfo(scope.row)" :loading="deleteLoading[scope.row.key]" type="text" size="small">delete</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+
+    <!-- 编辑配置 Dialog -->
+    <el-dialog title="Edit this config" :visible.sync="dialogFormVisible">
+      <el-form :model="formChange">
+        <el-form-item label="key" :label-width="formLabelWidth">
+          <el-input v-model="formChange.key" disabled></el-input>
+        </el-form-item>
+        <el-form-item label="value" :label-width="formLabelWidth">
+          <el-input v-model="formChange.value"></el-input>
+        </el-form-item>
+        <el-form-item label="memo" :label-width="formLabelWidth">
+          <el-input v-model="formChange.memo"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisible = false">Cancel</el-button>
+        <el-button type="primary" v-loading="editLoading" @click="editInfo">Confirm</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
  
@@ -56,7 +82,7 @@ export default {
   name: "Configer",
   data() {
     return {
-      msg: "Project Configer",
+      msg: "Project Configuration",
       deleteLoading: {}, /*删除配置的loding缓存 */
       dialogFormVisible : false, /*编辑子窗口默认不可见 */
       dialogFormCreatedVisible : false, /*创建配置子窗口默认不可见 */
@@ -175,9 +201,9 @@ export default {
       })
     },
     createInfo () {
-      if (!confirm('Do you confirm to create this configer？')) {
-        return
-      }
+      //if (!confirm('Do you confirm to create this configer？')) {
+      //  return
+      //}
       //console.log(row)
       // 执行编辑操作
       this.createLoading = true
@@ -295,4 +321,47 @@ export default {
  
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+.Configer {
+  padding: 40px 20px;
+  text-align: center;
+  background: #f5f7fa; /* 淡灰背景 */
+  min-height: 100vh;
+}
+
+/* 标题美化 */
+.Configer h1 {
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+/* 按钮区域 */
+.Configer .top-actions {
+  margin-bottom: 20px;
+}
+
+/* 表格容器 */
+.Configer .table-container {
+  display: flex;
+  justify-content: center;
+}
+
+/* 表格样式 */
+::v-deep .el-table {
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+  background: white;
+}
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px; /* 表头和表格的间距 */
+}
+
+.page-header h1 {
+  font-size: 22px;
+  margin: 0;
+}
 </style>

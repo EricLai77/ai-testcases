@@ -1,8 +1,14 @@
 <template>
- <div class="Testcases">
+ <div class="Doc">
     <el-card class="box-card">
       <div slot="header" class="clearfix">
-        <span>Testcase Management</span>
+        <span>Project Management</span>
+        <el-button 
+          style="float: right; padding: 3px 0" 
+          type="text"
+          @click="showCreateProjectDialog = true">
+          Create a new project
+        </el-button>
       </div>
       <el-table v-loading="projecttableLoading" :data="projects" style="width: 100%">
         <el-table-column prop="name" label="Project Name"></el-table-column>
@@ -15,12 +21,35 @@
         <el-table-column label="Operations" width="280">
           <template slot-scope="scope">
             <el-button size="mini" @click="viewProject(scope.row)">View</el-button>
-            <el-button size="mini" type="primary" @click="uploadDocument(scope.row)">Upload InputDocument</el-button>
+            <el-button size="mini" v-loading="loading_deleteproject" @click="deleteProject(scope.row)">Delete</el-button>
+            <el-button size="mini" type="primary" @click="uploadDocument(scope.row)">Upload</el-button>
           </template>
         </el-table-column>
       </el-table>
     </el-card>
-    
+    <!-- 新建项目对话框 -->
+    <el-dialog title="Create a new project" :visible.sync="showCreateProjectDialog" width="500px">
+      <el-form :model="newProject" label-width="120px" class="project-form">
+        <el-form-item label="Project Name">
+          <el-input v-model="newProject.name" style="max-width: 300px;" />
+        </el-form-item>
+        <el-form-item label="Description">
+          <el-input
+            type="textarea"
+            v-model="newProject.description"
+            style="max-width: 300px;"
+          />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="showCreateProjectDialog = false">Cancel</el-button>
+        <el-button
+          type="primary"
+          @click="createProject"
+          v-loading="loading_createproject"
+        >Confirm</el-button>
+      </div>
+    </el-dialog>
     <!-- 上传文档对话框 -->
     <el-dialog 
       title="Upload requirement documents" 
@@ -63,31 +92,30 @@
 
     <!-- 项目详情抽屉 -->
     <el-drawer
-      title="Testcase Details"
+      title="Project Details"
       :visible.sync="drawerVisible"
       direction="rtl"
       size="60%">
       <div class="project-detail">
         <el-divider class="compact-divider"></el-divider>
 
-        <h3 class="doc-title">Inputed Requirement Documents</h3>
+        <h3 class="doc-title">Requirement Documents</h3>
         <el-table 
-          :data="currentProject.inputdocuments" 
+          :data="currentProject.documents" 
           class="compact-table"
           border
           size="small" 
           style="width:100%">
-          <el-table-column prop="name" label="Name" width="260"></el-table-column>
-          <el-table-column prop="uploaded_at" label="Upload Time" width="260">
+          <el-table-column prop="name" label="Name"></el-table-column>
+          <el-table-column prop="uploaded_at" label="Upload Time" width="160">
             <template slot-scope="scope">
               {{ formatDate(scope.row.uploaded_at) }}
             </template>
           </el-table-column>
-          <el-table-column label="Operations" width="360">
+          <el-table-column label="Operations" width="160">
             <template slot-scope="scope">
-              <el-button size="mini" v-loading="loading_generatetestcase" @click="generateTestcase(scope.row)">Generate Testcase</el-button>
-              <el-button size="mini" v-loading="loading_deletedocument" @click="deleteDocument(scope.row)">Delete</el-button>
               <el-button size="mini" @click="viewDocument(scope.row)">View</el-button>
+              <el-button size="mini" v-loading="loading_deletedocument" @click="deleteDocument(scope.row)">Delete</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -118,14 +146,13 @@
  
 <script>
 export default {
-  name: "Testcases",
+  name: "Doc",
   data() {
     return {
       msg: "doc",
       loading_createproject: false,
       loading_deleteproject: false,
       loading_deletedocument: false,
-      loading_generatetestcase: false,
       loading_uploaddoc: false,
       projecttableLoading: false,
       projects: [],
@@ -146,7 +173,7 @@ export default {
         name: '',
         description: '',
         created_at: '',
-        inputdocuments: []
+        documents: []
       },
       showDocumentDialog: false,
       currentDocument: {
@@ -182,7 +209,7 @@ export default {
       
       console.log(formData)
       // 真正请求编辑
-      this.$axios.post('/api/mydocuments/inputdocuments/', formData,
+      this.$axios.post('/api/mydocuments/documents/', formData,
         {
           headers: {
             'X-CSRFToken': this.$Cookies.get('csrftoken'),
@@ -271,7 +298,7 @@ export default {
       })
     },
     deleteDocument(document) {
-     if (!confirm('Do you confirm to delete this inputdocument？')) {
+     if (!confirm('Do you confirm to delete this document？')) {
         return
       }
       this.loading_deletedocument = true
@@ -279,7 +306,7 @@ export default {
       var documentId = document.id
       console.log(documentId)
       console.log(this.$Cookies.get('csrftoken'))
-      this.$axios.post(`/api/mydocuments/inputdocuments/${documentId}/delete/`,
+      this.$axios.post(`/api/mydocuments/documents/${documentId}/delete/`,
         {},
         {
           headers: {
@@ -294,7 +321,7 @@ export default {
           alert('This delete operation failed!')
           this.loading_deletedocument = false
         } else { // 表示编辑成功
-          this.$message.success('You have deleted an inputdocument successfully.')
+          this.$message.success('You have deleted a document successfully.')
           this.loading_deletedocument = false
           this.drawerVisible = false
           this.loadProjects()
@@ -302,57 +329,6 @@ export default {
       }).catch((error) => {
         console.log(error)
         this.loading_deletedocument = false
-      })
-    },
-    generateTestcase(doc) {
-     if (!confirm('Do you confirm to generate testcase via this inputdocument？')) {
-        return
-      }
-      this.loading_generatetestcase = true
-      // 真正请求编辑
-      var documentId = doc.id
-      console.log(documentId)
-      console.log(this.$Cookies.get('csrftoken'))
-      this.$axios.post('/api/generate_testcase/',
-        { inputdocument_id: documentId },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': this.$Cookies.get('csrftoken'),
-          },
-          responseType: 'blob'
-        }
-      ).then((response) => {
-
-        console.log(response)
-        if (response.status !== 200) { // 表示编辑不成功
-          alert('This generation operation failed!')
-          this.loading_generatetestcase = false
-        } else { // 表示编辑成功
-
-
-          this.$message.success('You have create a series of testcases successfully.')
-          this.loading_generatetestcase = false
-          this.drawerVisible = false
-          this.loadProjects()
-
-          // 创建 blob 对象
-          const blob = new Blob([response.data], {
-            type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-          });
-
-          // 创建下载链接
-          const link = document.createElement('a');
-          link.href = window.URL.createObjectURL(blob);
-          link.download = 'testcases.docx';   // 下载下来的文件名
-          link.click();
-
-          // 释放 URL 对象
-          window.URL.revokeObjectURL(link.href);
-        }
-      }).catch((error) => {
-        console.log(error)
-        this.loading_generatetestcase = false
       })
     },
     viewProject(project) {

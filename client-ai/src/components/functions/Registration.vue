@@ -6,10 +6,10 @@
         <el-input v-model="registrationForm.username" autocomplete="off"></el-input>
       </el-form-item>
       <el-form-item label="password" prop="password">
-        <el-input type="password" v-model="registrationForm.password" autocomplete="off"></el-input>
+        <el-input type="password" v-model="registrationForm.password" autocomplete="off" show-password></el-input>
       </el-form-item>
       <el-form-item label="password confirm" prop="password2">
-        <el-input type="password" v-model="registrationForm.password2" autocomplete="off"></el-input>
+        <el-input type="password" v-model="registrationForm.password2" autocomplete="off" show-password></el-input>
       </el-form-item>
       <el-form-item label="email" prop="email">
         <el-input v-model="registrationForm.email" autocomplete="off"></el-input>
@@ -35,7 +35,7 @@ export default {
     var validatePass2 = (rule, value, callback) => {
         if (value === '') {
             callback(new Error('please enter your password'));
-        } else if (value !== this.registrationForm.pass) {
+        } else if (value !== this.registrationForm.password) {
             callback(new Error('two password do not match!'));
         } else {
             callback();
@@ -127,9 +127,8 @@ export default {
                 last_name: ''
               }
               this.loading = false
-              localStorage.setItem('userName', JSON.stringify({ username: response.data.username}))
               this.$router.push({
-                path: '/Home',
+                path: '/',
               })// 跳转到指定网页，后端来决定
             }
           }).catch((error) => {
@@ -150,19 +149,34 @@ export default {
  
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-h1,
-h2 {
-  font-weight: normal;
+.registration {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 40px;
 }
-ul {
-  list-style-type: none;
-  padding: 0;
+
+.demo-registrationForm {
+  width: 450px; /* 控制表单宽度 */
+  background: #fff;
+  padding: 30px 40px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
-li {
-  display: inline-block;
-  margin: 0 10px;
+
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
 }
-a {
-  color: #42b983;
+
+.form-actions .el-button {
+  flex: 1;
+  min-width: 120px;
 }
+
+.form-actions .el-button + .el-button {
+  margin-left: 15px;
+}
+
 </style>

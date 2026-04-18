@@ -1,0 +1,52 @@
+# Mysql host
+MYSQL_HOST: "eric-mysql-db.cnaq2m8qm4aj.ap-southeast-2.rds.amazonaws.com" 
+
+# Mysql port
+MYSQL_PORT: 3306 
+
+# Mysql username
+MYSQL_USER: "liruncheng" 
+
+# Mysql password
+MYSQL_PASSWORD: "540060472lrc" 
+
+# Mysql database name
+MYSQL_DATABASE: "vectors"
+# MYSQL_DATABASE: "aisystem"
+
+OPENAI_API_BASE: ""
+
+OPENAI_API_KEY: "fc9abb69a1bc4fd99bc68cd4667422a0.wysA9AgtTUOL6wZW"
+
+# vector embedding model
+OPENAI_API_MODEL_EMBEDDING: "embedding-2" 
+
+# natural language processing model
+OPENAI_API_MODEL_GLM4: "GLM-4-Flash" #"GLM-4-Flash" 
+
+# max threading count
+MAX_THREADING: 10 
+
+# interval between requests in seconds
+REQUEST_INTERVAL: 10 
+
+
+NEEDS_NAME: [
+  '洋么科技需求文档.docx',
+]
+
+# path to the FAISS database file
+FAISS_DB_PATH: "needs_vectors.faiss"
+
+# threshold for similarity search
+SIMILARITY_THRESHOLD: 0.86
+
+# length of the summary
+SUMMARY_LENGTH: 300
+
+
+N-GRAM: 2
+
+TOP_N: 0
+
+

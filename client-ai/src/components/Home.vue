@@ -11,9 +11,10 @@
             active-text-color="#ffd04b">
             <el-menu-item-group index="1">
                 <template slot="title">Functional Testing</template>
-                <el-menu-item index="1-1">Project Management</el-menu-item>
+                <el-menu-item index="/functions/DocumentsManager/Doc">Documents Management</el-menu-item>
                 <el-menu-item index="/functions/AiTestcases/Testcases">Test Case</el-menu-item>
             </el-menu-item-group>
+            <!--
             <el-menu-item-group index="2">
                 <template slot="title">API Testing</template>
                 <el-menu-item index="2-1">Project Dependency</el-menu-item>
@@ -28,9 +29,10 @@
                 <i class="el-icon-chat-dot-square"></i>
                 <span slot="title">Mobile App Automation Testing</span>
             </el-menu-item>
+            -->
             <el-menu-item index="/functions/Configer">
                 <i class="el-icon-s-tools" ></i>
-                <span slot="title">Project Configer</span>
+                <span slot="title">Project Configuration</span>
             </el-menu-item>
         </el-menu>
       </div>
@@ -60,7 +62,7 @@
     },
     created() {
       const loginUserName = JSON.parse(localStorage.getItem('userName'))
-      localStorage.removeItem('userName') // 使用后清除
+      //localStorage.removeItem('userName') // 使用后清除
       console.log(loginUserName['username'])
       this.username = loginUserName['username']
     },

@@ -8,6 +8,7 @@ import Testcases from '@/components/functions/AiTestcases/Testcases'
 import WebTest from '@/components/functions/AiWebTest/WebTest'
 import Configer from '@/components/functions/Configer'
 import Registration from '@/components/functions/Registration'
+import Doc from '@/components/functions/DocumentsManager/Doc'
 Vue.use(Router)
 
 export default new Router({
@@ -15,7 +16,7 @@ export default new Router({
     {
       path: '/',
       name: 'Index',
-      component: Index
+      component: Index,
     },
     {
       path: '/functions/Registration',
@@ -26,7 +27,13 @@ export default new Router({
       path: '/Home',
       name: 'Home',
       component: Home,
+      redirect: '/functions/DocumentsManager/Doc',
       children: [
+        {
+          path: '/functions/DocumentsManager/Doc',
+          name: 'Doc',
+          component: Doc
+        },
         {
           path: '/functions/Configer',
           name: 'Configer',
