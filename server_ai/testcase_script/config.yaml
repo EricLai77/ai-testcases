@@ -1,14 +1,14 @@
 # Mysql host
-MYSQL_HOST: "eric-mysql-db.cnaq2m8qm4aj.ap-southeast-2.rds.amazonaws.com" 
+MYSQL_HOST: "your_mysql_host" 
 
 # Mysql port
 MYSQL_PORT: 3306 
 
 # Mysql username
-MYSQL_USER: "liruncheng" 
+MYSQL_USER: "MYSQL_USER" 
 
 # Mysql password
-MYSQL_PASSWORD: "540060472lrc" 
+MYSQL_PASSWORD: "MYSQL_PASSWORD:" 
 
 # Mysql database name
 MYSQL_DATABASE: "vectors"
@@ -16,7 +16,7 @@ MYSQL_DATABASE: "vectors"
 
 OPENAI_API_BASE: ""
 
-OPENAI_API_KEY: "fc9abb69a1bc4fd99bc68cd4667422a0.wysA9AgtTUOL6wZW"
+OPENAI_API_KEY: "OPENAI_API_KEY"
 
 # vector embedding model
 OPENAI_API_MODEL_EMBEDDING: "embedding-2" 
@@ -32,7 +32,7 @@ REQUEST_INTERVAL: 10
 
 
 NEEDS_NAME: [
-  '洋么科技需求文档.docx',
+  'requirements.docx',
 ]
 
 # path to the FAISS database file
