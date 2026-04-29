@@ -73,8 +73,6 @@ server_ai/
 requirements.txt
 ```
 
-## 📸 Screenshots
-
 ## 🤝 Contributing
 To contribute to the project, please follow these steps:
 1. Fork the repository using `git fork`.
